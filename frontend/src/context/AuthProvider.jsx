@@ -1,43 +1,38 @@
-import { useState } from 'react';
-import { AuthContext } from './authContextConfig';
-import PropTypes from 'prop-types';
+import React, { createContext, useState, useEffect } from 'react';
+
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token'));
-    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+    const [token, setToken] = useState(null);
 
-    const login = (userData, userToken) => {
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        const storedToken = localStorage.getItem('token');
+
+        if (storedUser && storedToken) {
+            setUser(JSON.parse(storedUser));
+            setToken(storedToken);
+        }
+    }, []);
+
+    const login = (userData, token) => {
         setUser(userData);
-        setToken(userToken);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', userToken);
+        setToken(token);
         localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('token', token);
     };
 
     const logout = () => {
         setUser(null);
         setToken(null);
-        setIsAuthenticated(false);
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
-    };
-
-    const value = {
-        user,
-        token,
-        isAuthenticated,
-        login,
-        logout
+        localStorage.removeItem('token');
     };
 
     return (
-        <AuthContext.Provider value={value}>
+        <AuthContext.Provider value={{ user, token, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
-};
-
-AuthProvider.propTypes = {
-    children: PropTypes.node.isRequired
 };

@@ -3,10 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./config/dbConfig');
 const authRoutes = require('./routes/authRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
 
 const app = express();
 
-// CORS ayarlarını güncelle
+// CORS ayarları
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -21,6 +22,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/departments', departmentRoutes);
+
 
 // Error handling
 app.use((err, req, res, next) => {

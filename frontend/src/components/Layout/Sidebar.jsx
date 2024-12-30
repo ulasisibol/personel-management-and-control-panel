@@ -21,6 +21,13 @@ const Sidebar = () => {
                             </NavLink>
                         </li>
                     )}
+                    {user?.isSuperUser && (
+                        <li className="nav-item">
+                            <NavLink to="/departments/add" className="nav-link text-white">
+                                Departman Ekle
+                            </NavLink>
+                        </li>
+                    )}
                     <li className="nav-item">
                         <NavLink to="/empty" className="nav-link text-white">
                             Boş Alan

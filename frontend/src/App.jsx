@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import EmptyPage from './pages/EmptyPage';
 import PrivateRoute from './routes/PrivateRoute';
 import AdminRoute from './routes/AdminRoute';
+import AddDepartment from './pages/AddDepartment';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
               
               <Route element={<AdminRoute />}>
                 <Route path="/users/add" element={<AddUser />} />
+                <Route path="/departments/add" element={<AddDepartment />} />
               </Route>
             </Route>
           </Route>
