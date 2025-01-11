@@ -30,7 +30,7 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Giriş sırasında bir hata oluştu');
+      setError(err.response?.data?.message || 'An error occurred during login');
     }
   };
 
@@ -38,10 +38,10 @@ const Login = () => {
     <div className="vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="card shadow-sm" style={{ width: '400px' }}>
         <div className="card-body p-5">
-          <h2 className="text-center mb-4">Giriş Yap</h2>
+          <h2 className="text-center mb-4">Login</h2>
           <form onSubmit={handleLogin}>
             <div className="mb-3">
-              <label className="form-label">Kullanıcı Adı</label>
+              <label className="form-label">Username</label>
               <input
                 type="text"
                 className="form-control"
@@ -51,7 +51,7 @@ const Login = () => {
               />
             </div>
             <div className="mb-4">
-              <label className="form-label">Şifre</label>
+              <label className="form-label">Password</label>
               <input
                 type="password"
                 className="form-control"
@@ -64,7 +64,7 @@ const Login = () => {
               <div className="alert alert-danger py-2 mb-4">{error}</div>
             )}
             <button type="submit" className="btn btn-primary w-100">
-              Giriş Yap
+              Login
             </button>
           </form>
         </div>

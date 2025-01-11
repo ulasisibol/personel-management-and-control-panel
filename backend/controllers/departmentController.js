@@ -120,20 +120,23 @@ const listDepartments = async (req, res) => {
         const pool = await getConnection();
 
         const query = `
-        SELECT 
-          d.departman_id,
-          d.departman_adi,
-          d.calisan_sayisi,
-          dy.user_id AS manager_user_id,
-          u.username AS manager_username
-        FROM departman AS d
-        LEFT JOIN departman_yoneticileri AS dy ON d.departman_id = dy.departman_id
-        LEFT JOIN users AS u ON dy.user_id = u.id;
-      `;
+            SELECT 
+              d.departman_id,
+              d.departman_adi,
+              d.created_at, -- Eklenme tarihi
+              COUNT(p.personnel_id) AS calisan_sayisi, -- Çalışan sayısı
+              dy.user_id AS manager_user_id,
+              u.username AS manager_username
+            FROM departman AS d
+            LEFT JOIN personnel AS p ON d.departman_id = p.department_id
+            LEFT JOIN departman_yoneticileri AS dy ON d.departman_id = dy.departman_id
+            LEFT JOIN users AS u ON dy.user_id = u.id
+            GROUP BY d.departman_id, d.departman_adi, d.created_at, dy.user_id, u.username;
+        `;
 
         const result = await pool.request().query(query);
 
-        // Departmanları gruplandırıyoruz (her departman bir obje, managers dizisi içeriyor)
+        // Departmanları gruplandır
         const departmentsMap = {};
 
         result.recordset.forEach(row => {
@@ -141,8 +144,9 @@ const listDepartments = async (req, res) => {
                 departmentsMap[row.departman_id] = {
                     departman_id: row.departman_id,
                     departman_adi: row.departman_adi,
+                    created_at: row.created_at,
                     calisan_sayisi: row.calisan_sayisi,
-                    managers: [] // Yönetici listesini burada tutuyoruz
+                    managers: []
                 };
             }
             if (row.manager_user_id) {
@@ -153,9 +157,7 @@ const listDepartments = async (req, res) => {
             }
         });
 
-        const departmentsArray = Object.values(departmentsMap);
-
-        res.status(200).json(departmentsArray);
+        res.status(200).json(Object.values(departmentsMap));
     } catch (err) {
         console.error('Departman listeleme hatası:', err.message);
         res.status(500).json({ message: 'Sunucu hatası' });

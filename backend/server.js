@@ -3,7 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./config/dbConfig');
 const authRoutes = require('./routes/authRoutes');
+const personnelRoutes = require('./routes/personnelRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
+const taskRoutes = require('./routes/taskRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
+const shiftsRoutes = require('./routes/shiftsRoutes');
+const extraWork = require('./routes/extraRoutes');
+const holiday = require('./routes/holidayRoutes');
+const absenteeismRoutes = require("./routes/absenteeismRoutes");
+const openaiRoutes = require("./routes/openaiRoutes");
+
 
 const app = express();
 
@@ -23,6 +32,14 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/personnel', personnelRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use("/api/shifts", shiftsRoutes);
+app.use("/api/extraWork", extraWork);
+app.use("/api/holiday", holiday);
+app.use("/api/absenteeism", absenteeismRoutes);
+app.use('/api/openai', openaiRoutes);
 
 
 // Error handling
