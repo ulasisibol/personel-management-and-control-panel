@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useAuth } from '../../context/useAuth.js';
+import logo from "../../assets/logo-1.png"
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -35,11 +36,11 @@ const Login = () => {
   };
 
   return (
-    <div className="vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div className="card shadow-sm" style={{ width: '400px' }}>
-        <div className="card-body p-5">
-          <h2 className="text-center mb-4">Login</h2>
-          <form onSubmit={handleLogin}>
+    <div className="vh-100 d-flex align-items-center justify-content-center" style={{backgroundColor: "black", borderRadius: "5px 10px 10px 10px"}}> 
+      <div className="card shadow-sm" style={{ width: '400px', backgroundColor: "rgb(32 33 35)", color: "white"}}>
+        <div className="card-body p-5" >
+          <h2 className="text-center mb-4"><img style={{ width: '100px' }} src={logo} alt="" /></h2>
+          <form onSubmit={handleLogin} >
             <div className="mb-3">
               <label className="form-label">Username</label>
               <input
@@ -63,7 +64,7 @@ const Login = () => {
             {error && (
               <div className="alert alert-danger py-2 mb-4">{error}</div>
             )}
-            <button type="submit" className="btn btn-primary w-100">
+            <button type="submit" className="btn btn-primary w-100" style={{backgroundColor: "#1a7f64"}}>
               Login
             </button>
           </form>

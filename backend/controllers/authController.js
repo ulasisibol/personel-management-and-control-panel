@@ -24,7 +24,7 @@ const loginUser = async (req, res) => {
             `);
 
         if (result.recordset.length === 0) {
-            return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+            return res.status(401).json({ message: 'Invalid username or password' });
         }
 
         const user = result.recordset[0];
@@ -33,7 +33,7 @@ const loginUser = async (req, res) => {
         // 2) Şifre kontrolü
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+            return res.status(401).json({ message: 'Invalid username or password' });
         }
 
         // 3) is_super_user -> boolean
