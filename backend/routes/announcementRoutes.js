@@ -5,6 +5,7 @@ const {
     createAnnouncement,
     getAnnouncements,
     republishAnnouncement,
+    deleteAnnouncement,
 } = require('../controllers/announcementController');
 const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
@@ -19,5 +20,12 @@ router.get('/', verifyToken, getAnnouncements);
 // 3. Admin tarafından departman duyurusunu tekrar yayınla
 router.post('/republish', verifyToken, isAdmin, republishAnnouncement);
 // Sadece admin, departman duyurusunu yeniden yayınlayabilir
+
+// 3. Admin tarafından departman duyurusunu tekrar yayınla
+router.delete("/:id", verifyToken, deleteAnnouncement);
+// Sadece admin, departman duyurusunu yeniden yayınlayabilir
+
+
+
 
 module.exports = router;

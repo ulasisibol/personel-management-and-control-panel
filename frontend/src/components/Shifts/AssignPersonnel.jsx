@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "../../context/useAuth";
 
 const AssignPersonnel = () => {
+  const { user } = useAuth();
   const [personnelList, setPersonnelList] = useState([]);
   const [selectedPersonnel, setSelectedPersonnel] = useState([]);
   const [shiftsList, setShiftsList] = useState([]);
@@ -16,10 +18,12 @@ const AssignPersonnel = () => {
 
   const fetchShifts = async () => {
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.get("/api/shifts", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
+        params: user?.isSuperUser ? {} : { department_id: user.departmentId },
       });
       setShiftsList(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (error) {
@@ -30,9 +34,10 @@ const AssignPersonnel = () => {
 
   const fetchPersonnel = async (shiftId) => {
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.get(`/api/shifts/personnel?shiftId=${shiftId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setPersonnelList(response.data);
@@ -74,10 +79,19 @@ const AssignPersonnel = () => {
     }
 
     try {
-      await axios.post(`/api/shifts/${selectedShiftId}/assign`, {
-        personnelIds: selectedPersonnel.map((person) => person.personnel_id),
-        assignedDate,
-      });
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `/api/shifts/${selectedShiftId}/assign`,
+        {
+          personnelIds: selectedPersonnel.map((person) => person.personnel_id),
+          assignedDate,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       alert("Shift assigned successfully!");
       setSelectedPersonnel([]);
     } catch (error) {
@@ -86,9 +100,24 @@ const AssignPersonnel = () => {
     }
   };
 
+  function formatTime(dateTimeString) {
+    if (!dateTimeString) return "N/A";
+    const date = new Date(dateTimeString);
+    if (isNaN(date)) return dateTimeString; // Eğer geçersiz bir tarihse olduğu gibi döndür
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">Personnel Assignment</h2>
+    <div style={{ padding: "1.5rem",  margin: "auto" }}>
+      <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1.5rem", backgroundColor: "#fff" }}>
+      <h4
+       style={{
+        marginBottom: "1.5rem",
+        textAlign: "center",
+        fontWeight: "bold",
+      }}
+      >Personnel Assignment</h4>
       <div className="list-group">
         {shiftsList.map((shift) => (
           <div key={shift.id} className="mb-3">
@@ -100,14 +129,17 @@ const AssignPersonnel = () => {
                 border: "1px solid #ddd",
                 borderRadius: "10px",
                 padding: "15px",
-                backgroundColor: selectedShiftId === shift.id ? "#007bff" : "#fff",
+                backgroundColor: selectedShiftId === shift.id ? "#1a7f64" : "#fff",
                 color: selectedShiftId === shift.id ? "#fff" : "#000",
               }}
               onClick={() => handleSelectShift(shift.id)}
             >
               <span>
-                {shift.title} <small>({shift.start_time} - {shift.end_time})</small>
-              </span>
+      {shift.title}{" "}
+      <small>
+        ({formatTime(shift.start_time)} - {formatTime(shift.end_time)})
+      </small>
+    </span>
               <i className={`bi ${selectedShiftId === shift.id ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
             </button>
             {selectedShiftId === shift.id && (
@@ -188,6 +220,7 @@ const AssignPersonnel = () => {
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

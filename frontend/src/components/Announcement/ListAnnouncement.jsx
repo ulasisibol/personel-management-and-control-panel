@@ -10,6 +10,7 @@ const ListAnnouncement = () => {
   const [republishId, setRepublishId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [expandedAnnouncement, setExpandedAnnouncement] = useState(null);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -69,6 +70,22 @@ const ListAnnouncement = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this announcement?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:3000/api/announcements/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAnnouncements((prev) => prev.filter((announcement) => announcement.id !== id));
+      setSuccessMessage("Announcement deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting announcement:", error.message);
+      setErrorMessage("Failed to delete announcement.");
+    }
+  };
+
   const handleCheckboxChange = (id) => {
     setSelectedDepartments((prevSelected) =>
       prevSelected.includes(id)
@@ -77,63 +94,84 @@ const ListAnnouncement = () => {
     );
   };
 
+  const toggleExpand = (id) => {
+    if (expandedAnnouncement !== id) {
+      setSelectedDepartments([]);
+    }
+    setExpandedAnnouncement((prevId) => (prevId === id ? null : id));
+  };
+
   return (
     <div className="container mt-4">
-      <h3>Announcement List</h3>
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
-      <div className="list-group">
+      <div className="announcement-list">
         {announcements.length > 0 ? (
           announcements.map((announcement) => (
-            <div key={announcement.id} className="list-group-item">
-              <p>
-                <strong>Title:</strong> {announcement.title}
-              </p>
-              <p>
-                <strong>Content:</strong> {announcement.content}
-              </p>
-              <p>
-                <strong>Creation Date:</strong>{" "}
-                {new Date(announcement.created_at).toLocaleString()}
-              </p>
-
-              {user?.isSuperUser && (
-                <div>
+            <div
+              key={announcement.id}
+              className="announcement-item"
+              onClick={() => toggleExpand(announcement.id)}
+            >
+              <div className="announcement-header">
+                <span className="announcement-title">{announcement.title}</span>
+                {user?.isSuperUser && (
                   <button
-                    className="btn btn-warning btn-sm"
-                    onClick={() => setRepublishId(announcement.id)}
+                    className="btn btn-danger btn-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(announcement.id);
+                    }}
                   >
-                    Republish
+                    Delete
                   </button>
-
-                  {republishId === announcement.id && (
-                    <div className="mt-3">
-                      <label htmlFor="departments">Select Department:</label>
-                      <div className="mb-2">
-                        {departments.map((dept) => (
-                          <div key={dept.departman_id} className="form-check">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              id={`dept-${dept.departman_id}`}
-                              checked={selectedDepartments.includes(dept.departman_id)}
-                              onChange={() => handleCheckboxChange(dept.departman_id)}
-                            />
-                            <label
-                              htmlFor={`dept-${dept.departman_id}`}
-                              className="form-check-label"
-                            >
-                              {dept.departman_adi}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
+                )}
+              </div>
+              {expandedAnnouncement === announcement.id && (
+                <div
+                  className="announcement-content"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p>{announcement.content}</p>
+                  <p>
+                    <strong>Creation Date:</strong>{" "}
+                    {new Date(announcement.created_at).toLocaleString()}
+                  </p>
+                  {user?.isSuperUser && (
+                    <div>
                       <button
-                        className="btn btn-success btn-sm"
-                        onClick={handleRepublish}
+                        className="btn btn-warning btn-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRepublishId(announcement.id);
+                        }}
                       >
-                        Submit
+                        Republish
                       </button>
+                      {republishId === announcement.id && (
+                        <div className="republish-section">
+                          <label>Select Department:</label>
+                          {departments.map((dept) => (
+                            <div key={dept.departman_id} className="form-check">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={selectedDepartments.includes(dept.departman_id)}
+                                onChange={() => handleCheckboxChange(dept.departman_id)}
+                              />
+                              <label className="form-check-label">
+                                {dept.departman_adi}
+                              </label>
+                            </div>
+                          ))}
+                          <button
+                            className="btn btn-warning btn-sm mt-3"
+                            onClick={handleRepublish}
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -144,6 +182,58 @@ const ListAnnouncement = () => {
           <div className="alert alert-info">There are no announcements yet.</div>
         )}
       </div>
+
+      <style jsx>{`
+        .announcement-item {
+          background: #fff;
+          border-radius: 6px;
+          padding: 20px;
+          margin-bottom: 12px;
+          cursor: pointer;
+        }
+        .announcement-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .announcement-title {
+          font-weight: 600;
+        }
+        .announcement-content {
+          margin-top: 12px;
+        }
+        .republish-section {
+          margin-top: 12px;
+        }
+        .btn-warning {
+          background-color: #1a7f64;
+          border: none;
+          color: #fff;
+          padding: 10px 15px;
+          font-size: 16px;
+          font-weight: bold;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        .btn-warning:hover {
+          background-color: #10a37f;
+        }
+        .btn-danger {
+          background-color: #1a7f64;
+          border: none;
+          color: #fff;
+          padding: 10px 15px;
+          font-size: 16px;
+          font-weight: bold;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        .btn-danger:hover {
+          background-color: #2da485;
+        }
+      `}</style>
     </div>
   );
 };

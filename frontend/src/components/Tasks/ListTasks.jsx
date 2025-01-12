@@ -10,11 +10,11 @@ const TaskList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState('');
 
-  // Complete modal state
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [completionNote, setCompletionNote] = useState('');
 
+  // Fetch tasks
   const fetchTasks = async () => {
     try {
       setError('');
@@ -27,11 +27,7 @@ const TaskList = () => {
       });
 
       let data = response.data.data || [];
-
-      // Sort by priority (based on due_date)
       data.sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-
-      // Remove tasks with "approved" status
       data = data.filter((task) => task.status !== 'approved');
 
       setTasks(data);
@@ -44,9 +40,9 @@ const TaskList = () => {
 
   useEffect(() => {
     fetchTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Search tasks
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
@@ -122,15 +118,22 @@ const TaskList = () => {
   };
 
   return (
-    <div className="card">
-      <div className="card-body">
-        <h4 className="card-title mb-4">Task List</h4>
+    <div style={{ padding: '1rem' }}>
+      <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', backgroundColor: 'white' }}>
+      <h4
+     style={{
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      fontWeight: "bold",
+    }}
+    >Task List</h4>
 
-        <div className="mb-3">
+        {/* Search Box */}
+        <div style={{ marginBottom: '1.5rem' }}>
           <input
             type="text"
-            placeholder="Search tasks..."
             className="form-control"
+            placeholder="Search tasks..."
             value={searchQuery}
             onChange={handleSearch}
           />
@@ -138,63 +141,54 @@ const TaskList = () => {
 
         {error && <div className="alert alert-danger">{error}</div>}
 
-        <table className="table table-hover table-bordered">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Department</th>
-              <th>Status</th>
-              <th>Due Date</th>
-              <th>Time Left</th>
-              <th>Created By</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTasks.map((task) => (
-              <tr key={task.id}>
-                <td>{task.id}</td>
-                <td>{task.baslik}</td>
-                <td>
-                  {task.status === 'rejected'
-                    ? task.rejection_reason || 'No rejection reason'
-                    : task.aciklama}
-                </td>
-                <td>{task.departman_adi || task.departman_id}</td>
-                <td>{task.status}</td>
-                <td>
-                  {task.due_date && !isNaN(new Date(task.due_date))
-                    ? new Date(task.due_date).toLocaleDateString()
-                    : '-'}
-                </td>
-                <td>
-                  {task.due_date ? calculateCountdown(task.due_date) : '-'}
-                </td>
-                <td>{task.assigned_by}</td>
-                <td>
-                  {task.status === 'open' || task.status === 'rejected' ? (
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => openCompleteModal(task.id)}
-                    >
-                      Complete
-                    </button>
-                  ) : (
-                    <span>-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div>
+          {filteredTasks.map((task) => (
+            <div
+              key={task.id}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                padding: '1rem',
+                marginBottom: '1rem',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                backgroundColor: '#f9f9f9',
+              }}
+            >
+              {/* Task Info */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h6 style={{ margin: 0 }}>{task.baslik}</h6>
+                  <small>{task.departman_adi || task.departman_id}</small>
+                </div>
+                <div>
+                  <small style={{fontSize: "20px"}}>{calculateCountdown(task.due_date)}</small>
+                </div>
+              </div>
 
-        {filteredTasks.length === 0 && !error && (
-          <div className="alert alert-info">
-            No tasks match the search criteria.
-          </div>
-        )}
+              {/* Task Description */}
+              <div style={{ marginTop: '0.5rem', color: '#666' }}>
+                <p style={{ margin: 0 }}>{task.aciklama}</p>
+              </div>
+
+              {/* Actions */}
+              <div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ alignSelf: 'center', backgroundColor: "#1a7f64", padding: "5px 10px 5px 10px", fontSize: "17px" }}
+                  onClick={() => openCompleteModal(task.id)}
+                  disabled={task.status === 'approved'}
+                >
+                  Complete
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {filteredTasks.length === 0 && !error && (
+            <div className="alert alert-info">No tasks match the search criteria.</div>
+          )}
+        </div>
       </div>
 
       {/* Complete Modal */}

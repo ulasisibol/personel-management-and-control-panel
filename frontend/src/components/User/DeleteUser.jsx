@@ -46,9 +46,15 @@ const DeleteUser = () => {
   };
 
   return (
-    <div className="card">
+    <div className="card" style={{margin: "20px", borderRadius: "10px"}}>
       <div className="card-body">
-        <h4 className="card-title">Existing Users</h4>
+      <h4
+     style={{
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      fontWeight: "bold",
+    }}
+    >Delete User</h4>
         {error && <div className="alert alert-danger mb-3">{error}</div>}
         {success && <div className="alert alert-success mb-3">{success}</div>}
         <table className="table">
@@ -78,6 +84,25 @@ const DeleteUser = () => {
           </tbody>
         </table>
       </div>
+      <style jsx>{`
+        
+        .btn-danger{
+          background-color: #1a7f64;
+          border: none;
+          color: #fff;
+          padding: 5px;
+          font-size: 16px;
+          font-weight: bold;
+          border-radius: 5px;
+          width: 80%;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        .btn-danger:hover {
+          background-color: #10a37f;
+        }
+        
+      `}</style>
     </div>
   );
 };

@@ -12,6 +12,7 @@ const extraWork = require('./routes/extraRoutes');
 const holiday = require('./routes/holidayRoutes');
 const absenteeismRoutes = require("./routes/absenteeismRoutes");
 const openaiRoutes = require("./routes/openaiRoutes");
+const shortcutRoutes = require("./routes/shortcutRoutes");
 
 
 const app = express();
@@ -40,6 +41,7 @@ app.use("/api/extraWork", extraWork);
 app.use("/api/holiday", holiday);
 app.use("/api/absenteeism", absenteeismRoutes);
 app.use('/api/openai', openaiRoutes);
+app.use('/api/shortcuts', shortcutRoutes);
 
 
 // Error handling

@@ -35,38 +35,41 @@ exports.createShift = async (req, res) => {
 
 
 
-
 exports.getShifts = async (req, res) => {
     try {
+        const { isSuperUser, departmentId } = req.user; // Kullanıcı bilgilerini alın
+
         const pool = await getConnection();
 
-        // Eğer kullanıcı bir departman id'si gönderirse sadece o departmana ait vardiyaları getir
-        const departmentId = req.query.department_id; // Frontend'den departman id'si gönderiliyor mu kontrol et
-
+        // Shift ve Department bilgilerini birleştiren sorgu
         let query = `
-            SELECT s.id, s.title, s.start_time, s.end_time, s.department_id, d.departman_adi AS department_name
-            FROM shifts s
-            INNER JOIN departman d ON s.department_id = d.departman_id
-        `;
+        SELECT 
+          shifts.id, 
+          shifts.title, 
+          shifts.start_time, 
+          shifts.end_time, 
+          shifts.department_id,
+          departman.departman_adi AS department_name
+        FROM shifts
+        LEFT JOIN departman ON shifts.department_id = departman.departman_id
+      `;
 
-        // Departman id varsa filtreleme uygula
-        if (departmentId) {
-            query += ` WHERE s.department_id = @departmentId`;
+        // Eğer admin değilse, sadece kendi departmanına ait shiftleri döndür
+        if (!isSuperUser) {
+            query += ` WHERE shifts.department_id = @departmentId`;
         }
 
-        query += ` ORDER BY s.start_time`;
-
         const request = pool.request();
-        if (departmentId) {
-            request.input('departmentId', sql.Int, departmentId);
+        if (!isSuperUser) {
+            request.input("departmentId", sql.Int, departmentId);
         }
 
         const result = await request.query(query);
 
         res.status(200).json({ success: true, data: result.recordset });
     } catch (error) {
-        console.error("getShifts error:", error.message);
-        res.status(500).json({ success: false, message: "Vardiya listesi alınamadı." });
+        console.error("Error fetching shifts:", error.message);
+        res.status(500).json({ success: false, message: "Error fetching shifts." });
     }
 };
 

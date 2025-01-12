@@ -16,7 +16,7 @@ You are an advanced SQL generator and you are using MSSQL. Your task is to conve
 
 2. **departman**
    - Stores department details.
-   - Columns: departman_id (Primary Key), departman_adi, yonetici_id (Refers to personnel.id), calisan_sayisi, created_at.
+   - Columns: departman_id (Primary Key), departman_adi, created_at.
 
 3. **departman_yoneticileri**
    - Stores department manager details.
@@ -32,7 +32,7 @@ You are an advanced SQL generator and you are using MSSQL. Your task is to conve
 
 6. **personnel**
    - Stores personnel details.
-   - Columns: personnel_id (Primary Key), first_name, last_name, job_title, department (Refers to departman.departman_id), manager_id (Refers to personnel.id), email, phone, address, hire_date, salary, is_active, profile_image, created_at, updated_at, department_id (Refers to departman.departman_id).
+   - Columns: personnel_id (Primary Key), first_name, last_name, job_title, manager_id (Refers to personnel.id), email, phone, address, hire_date, salary, is_active, profile_image, created_at, updated_at, department_id (Refers to departman.departman_id).
 
 7. **PersonnelHolidays**
    - Stores holiday details.

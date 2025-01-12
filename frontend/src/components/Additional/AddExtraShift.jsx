@@ -116,7 +116,13 @@ const ExtraWorkManagement = () => {
       {/* Add Extra Work */}
       <div className="card my-4">
         <div className="card-body">
-          <h5 className="card-title">Add Extra Work</h5>
+        <h4
+     style={{
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      fontWeight: "bold",
+    }}
+    >Add Extra Work</h4>
           <div className="mb-3">
             <label className="form-label">Personnel</label>
             <input
@@ -187,7 +193,10 @@ const ExtraWorkManagement = () => {
               placeholder="Optional"
             ></textarea>
           </div>
-          <button className="btn btn-primary" onClick={handleAddExtraWork}>
+          <button className="btn btn-primary" onClick={handleAddExtraWork}
+          style={{ alignSelf: 'center', backgroundColor: "#1a7f64", width: "400px",alignItems: "center", fontSize: "17px" }}
+
+          >
             Add
           </button>
         </div>

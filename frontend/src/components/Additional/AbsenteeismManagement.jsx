@@ -17,16 +17,28 @@ const AbsenteeismManagement = () => {
 
   const fetchPersonnel = async () => {
     try {
-      const response = await axios.get("/api/holiday/", {
+      const response = await axios.get("/api/personnel", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
-      setPersonnelList(response.data?.data || []);
-      setFilteredPersonnelList(response.data?.data || []);
+      console.log("Personnel Response:", response.data); // Check the incoming response
+  
+      // Check if the response is an array
+      if (Array.isArray(response.data)) {
+        setPersonnelList(response.data); // Main list
+        setFilteredPersonnelList(response.data); // Filtered list
+      } else {
+        console.warn("Personnel response is not in the expected format:", response.data);
+        setPersonnelList([]); // Empty the list
+        setFilteredPersonnelList([]); // Empty the filtered list
+        alert("Could not retrieve personnel information.");
+      }
     } catch (error) {
-      console.error("Could not retrieve personnel information:", error);
+      console.error("Error fetching personnel:", error);
+      setPersonnelList([]);
+      setFilteredPersonnelList([]);
+      alert("Could not retrieve personnel information.");
     }
   };
-
   const fetchAbsenteeism = async () => {
     try {
       const response = await axios.get("/api/absenteeism/list", {
@@ -94,10 +106,15 @@ const AbsenteeismManagement = () => {
 
   return (
     <div className="container mt-4">
-      <h2>Absenteeism Management</h2>
       <div className="card my-4">
         <div className="card-body">
-          <h5 className="card-title">Add Absenteeism</h5>
+        <h4
+     style={{
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      fontWeight: "bold",
+    }}
+    >Add Absenteeism</h4>
           <div className="mb-3">
             <label>Personnel</label>
             <input
@@ -165,7 +182,10 @@ const AbsenteeismManagement = () => {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <button className="btn btn-primary" onClick={handleAddAbsenteeism}>
+          <button className="btn btn-primary" onClick={handleAddAbsenteeism}
+                    style={{ alignSelf: 'center', backgroundColor: "#1a7f64", width: "400px",alignItems: "center", fontSize: "17px" }}
+
+          >
             Add
           </button>
         </div>

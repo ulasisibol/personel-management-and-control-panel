@@ -32,6 +32,8 @@ import ExtraWorkManagement from './components/Additional/AddExtraShift';
 import HolidayManagement from './components/Additional/AddHoliday';
 import AbsenteeismManagement from './components/Additional/AbsenteeismManagement';
 import CreateQuery from './components/AIQuery/CreateQuery';
+import SavedQueries from './components/AIQuery/SavedQueries';
+import DeleteQuery from './components/AIQuery/DeleteQuery';
 
 function App() {
   return (
@@ -89,9 +91,10 @@ function App() {
               </Route>
 
               <Route element={<AdminRoute />}>
-                <Route path="/assistant/query" element={<CreateQuery />} />
+                <Route path="/assistant/query" element={<CreateQuery />} /> 
+                <Route path="/assistant/query/delete" element={<DeleteQuery />} /> 
               </Route>
-
+              <Route path="/assistant/query/:id" element={<SavedQueries />} /> 
             </Route>
           </Route>
 

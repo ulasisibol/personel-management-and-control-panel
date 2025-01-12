@@ -6,33 +6,29 @@ import { Navigate } from 'react-router-dom';
 const AddDepartment = () => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({ departmanAdi: '' });
-  const [departments, setDepartments] = useState([]); // All departments
+  const [departments, setDepartments] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Admin check
   if (!user?.isSuperUser) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // List all departments
   const fetchDepartments = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/departments/list');
       setDepartments(
-        response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Sort by date (newest to oldest)
+        response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       );
     } catch (err) {
       setError('An error occurred while loading departments.');
     }
   };
 
-  // Get department list when page loads
   useEffect(() => {
     fetchDepartments();
   }, []);
 
-  // Add new department
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -47,7 +43,7 @@ const AddDepartment = () => {
         }
       );
       setSuccess('Department created successfully');
-      setDepartments((prev) => [response.data, ...prev]); // Add new department to the list
+      setDepartments((prev) => [response.data, ...prev]);
       setFormData({ departmanAdi: '' });
       setError('');
     } catch (err) {
@@ -57,10 +53,10 @@ const AddDepartment = () => {
   };
 
   return (
-    <div className="card">
+    <div className="card department-card">
       <div className="card-body">
-        <h4 className="card-title mb-4">Add New Department</h4>
-        <form onSubmit={handleSubmit}>
+        <h4 className="card-title">Add New Department</h4>
+        <form onSubmit={handleSubmit} className="form-container">
           <div className="mb-3">
             <label className="form-label">Department Name</label>
             <input
@@ -78,33 +74,95 @@ const AddDepartment = () => {
           </button>
         </form>
 
-        {/* All Departments */}
         <h4 className="card-title mt-4">Departments</h4>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Department Name</th>
-              <th>Creation Date</th>
-              <th>Number of Employees</th>
-              <th>Managers</th>
-            </tr>
-          </thead>
-          <tbody>
-            {departments.map(dept => (
-              <tr key={dept.departman_id}>
-                <td>{dept.departman_adi}</td>
-                <td>{new Date(dept.created_at).toLocaleDateString()}</td>
-                <td>{dept.calisan_sayisi}</td>
-                <td>
-                  {dept.managers.length > 0
-                    ? dept.managers.map(manager => manager.username).join(', ')
-                    : 'No Manager'}
-                </td>
+        <div className="table-responsive">
+          <table className="table table-striped">
+            <thead className="table-header">
+              <tr>
+                <th>Department Name</th>
+                <th>Creation Date</th>
+                <th>Number of Employees</th>
+                <th>Managers</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {departments.map((dept) => (
+                <tr key={dept.departman_id}>
+                  <td>{dept.departman_adi}</td>
+                  <td>{new Date(dept.created_at).toLocaleDateString()}</td>
+                  <td>{dept.calisan_sayisi || 0}</td>
+                  <td>
+                    {dept.managers.length > 0
+                      ? dept.managers.map((manager) => manager.username).join(', ')
+                      : 'No Manager'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <style jsx>{`
+        .department-card {
+          color: black;
+          border-radius: 10px;
+          box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+          margin: 20px;
+          padding: 20px;
+        }
+        .card-title {
+          font-weight: bold;
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .form-control {
+          border: 1px solid #444;
+          border-radius: 6px;
+          padding: 10px;
+        }
+        .form-control:focus {
+          outline: none;
+        }
+        .btn-primary {
+          background-color: #1a7f64;
+          border: none;
+          padding: 10px 15px;
+          font-weight: bold;
+          border-radius: 6px;
+          width: 100%;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+          background-color: #10a37f;
+        }
+        .table {
+          margin-top: 20px;
+        }
+        .table-header {
+          background: #23272a;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+          background: #1e2124;
+        }
+        .table-striped tbody tr:nth-of-type(even) {
+          background: #2c2f33;
+        }
+        .alert {
+          padding: 10px;
+          margin-top: 10px;
+          border-radius: 6px;
+        }
+        .alert-danger {
+          background: #ffcccc;
+          color: #990000;
+        }
+        .alert-success {
+          background: #ccffcc;
+          color: #006600;
+        }
+      `}</style>
     </div>
   );
 };

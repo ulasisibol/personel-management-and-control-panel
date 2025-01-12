@@ -5,22 +5,23 @@ import { useAuth } from "../../context/useAuth";
 const CreateAnnouncement = () => {
   const { user } = useAuth();
   const [departments, setDepartments] = useState([]);
-  const [selectedDepartments, setSelectedDepartments] = useState([]);
-  const [announcementTitle, setAnnouncementTitle] = useState(""); // New field
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementText, setAnnouncementText] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchDepartments = async () => {
       if (user?.isSuperUser) {
         try {
           const token = localStorage.getItem("token");
-          const response = await axios.get("http://localhost:3000/api/departments/list", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          console.log("Received departments:", response.data); // Check the received data
+          const response = await axios.get(
+            "http://localhost:3000/api/departments/list",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
           setDepartments(response.data);
         } catch (error) {
           console.error("Failed to retrieve department list:", error);
@@ -44,9 +45,9 @@ const CreateAnnouncement = () => {
       await axios.post(
         "http://localhost:3000/api/announcements/create",
         {
-          title: announcementTitle, // Title being sent here
-          content: announcementText, // Content being sent here
-          departments: user.isSuperUser ? selectedDepartments : [user.departmentId],
+          title: announcementTitle,
+          content: announcementText,
+          departments: user.isSuperUser ? [selectedDepartmentId] : [user.departmentId],
           isFromDepartment: !user.isSuperUser,
         },
         {
@@ -56,42 +57,20 @@ const CreateAnnouncement = () => {
       setSuccessMessage("Announcement created successfully.");
       setAnnouncementText("");
       setAnnouncementTitle("");
-      setSelectedDepartments([]);
+      setSelectedDepartmentId("");
     } catch (error) {
       console.error(error.response?.data || "Announcement creation failed.");
       setErrorMessage(error.response?.data?.message || "Announcement creation failed.");
     }
   };
 
-  const handleDepartmentSearch = (e) => {
-    setSearchQuery(e.target.value.toLowerCase());
-  };
-
-  const filteredDepartments = departments.filter(
-    (dept) =>
-      dept.departman_adi &&
-      dept.departman_adi.toLowerCase().includes(searchQuery)
-  );
-
-  const handleCheckboxChange = (id) => {
-    setSelectedDepartments((prevSelected) =>
-      prevSelected.includes(id)
-        ? prevSelected.filter((deptId) => deptId !== id)
-        : [...prevSelected, id]
-    );
-  };
-
   return (
     <div className="container mt-4">
-      <h3>Create Announcement</h3>
       {successMessage && <div className="alert alert-success">{successMessage}</div>}
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-      <form onSubmit={handleSubmit}>
-        {/* Title Input */}
-        <div className="mb-3">
-          <label htmlFor="announcementTitle" className="form-label">
-            Announcement Title
-          </label>
+      <form onSubmit={handleSubmit} className="announcement-form">
+        <div className="form-group">
+          <label htmlFor="announcementTitle">Announcement Title</label>
           <input
             type="text"
             id="announcementTitle"
@@ -101,12 +80,8 @@ const CreateAnnouncement = () => {
             required
           />
         </div>
-
-        {/* Textarea Input */}
-        <div className="mb-3">
-          <label htmlFor="announcementText" className="form-label">
-            Announcement Text
-          </label>
+        <div className="form-group">
+          <label htmlFor="announcementText">Announcement Text</label>
           <textarea
             id="announcementText"
             className="form-control"
@@ -116,51 +91,100 @@ const CreateAnnouncement = () => {
             required
           />
         </div>
-
-        {/* Department Selection */}
         {user?.isSuperUser && (
-          <div className="mb-3">
-            <label htmlFor="departmentSearch" className="form-label">
-              Search Department
-            </label>
-            <input
-              type="text"
-              id="departmentSearch"
-              className="form-control mb-3"
-              placeholder="Search department..."
-              value={searchQuery}
-              onChange={handleDepartmentSearch}
-            />
-            <div>
-              {filteredDepartments.length > 0 ? (
-                filteredDepartments.map((dept) => (
-                  <div key={dept.departman_id} className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id={`dept-${dept.departman_id}`}
-                      checked={selectedDepartments.includes(dept.departman_id)}
-                      onChange={() => handleCheckboxChange(dept.departman_id)}
-                    />
-                    <label
-                      htmlFor={`dept-${dept.departman_id}`}
-                      className="form-check-label"
-                    >
-                      {dept.departman_adi || "Unnamed Department"}
-                    </label>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted">No department found.</p>
-              )}
-            </div>
+          <div className="form-group">
+            <label htmlFor="departmentSelect">Department</label>
+            <select
+              id="departmentSelect"
+              className="form-select"
+              value={selectedDepartmentId}
+              onChange={(e) => setSelectedDepartmentId(e.target.value)}
+              required
+            >
+              <option value="" disabled>
+                Select Department
+              </option>
+              {departments.map((dept) => (
+                <option key={dept.departman_id} value={dept.departman_id}>
+                  {dept.departman_adi || "Unnamed Department"}
+                </option>
+              ))}
+            </select>
           </div>
         )}
-
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary btn-block">
           Create Announcement
         </button>
       </form>
+      <style jsx>{`
+        .container {
+          background-color: white;
+          color: black !important;
+          margin: auto;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-title {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .announcement-form .form-group {
+          margin-bottom: 15px;
+        }
+        .form-group label {
+          display: block;
+          margin-bottom: 5px;
+        }
+        .form-control,
+        .form-select {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          font-size: 14px;
+        }
+        .form-control:focus,
+        .form-select:focus {
+          border-color: #007bff;
+          box-shadow: 0px 0px 4px rgba(0, 123, 255, 0.5);
+          outline: none;
+        }
+        .btn-primary {
+          background-color: #1a7f64;
+          border: none;
+          color: #fff;
+          padding: 10px 15px;
+          font-size: 16px;
+          font-weight: bold;
+          border-radius: 5px;
+          width: 100%;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+          background-color: #10a37f;
+        }
+        .alert {
+          padding: 10px;
+          margin-bottom: 15px;
+          border-radius: 5px;
+        }
+        .alert-success {
+          color: #155724;
+          background-color: #d4edda;
+          border-color: #c3e6cb;
+        }
+        .alert-danger {
+          color: #721c24;
+          background-color: #f8d7da;
+          border-color: #f5c6cb;
+        }
+        #announcementText{
+          min-height: 250px !important;
+
+        }
+      `}</style>
     </div>
   );
 };

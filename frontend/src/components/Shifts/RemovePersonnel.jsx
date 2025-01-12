@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "../../context/useAuth";
 
 const RemovePersonnel = () => {
+  const { user } = useAuth();
   const [personnelList, setPersonnelList] = useState([]);
   const [shiftsList, setShiftsList] = useState([]);
   const [selectedShiftId, setSelectedShiftId] = useState(null);
@@ -17,6 +19,7 @@ const RemovePersonnel = () => {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
+        params: user?.isSuperUser ? {} : { department_id: user.departmentId }, // Adminse tüm vardiyalar, değilse sadece departmana ait vardiyalar
       });
       setShiftsList(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (error) {
@@ -55,17 +58,13 @@ const RemovePersonnel = () => {
       alert("PersonnelId is missing or null. Cannot proceed.");
       return;
     }
-  
+
     const confirmRemove = window.confirm(
       "Are you sure you want to remove this personnel from the shift?"
     );
     if (!confirmRemove) return;
-  
+
     try {
-      console.log("Removing Personnel with Id:", id);
-      console.log("ShiftId being used:", selectedShiftId);
-  
-      // API isteği
       await axios.post(
         `/api/shifts/${selectedShiftId}/remove-personnel`,
         { personnelIds: [id] },
@@ -75,9 +74,8 @@ const RemovePersonnel = () => {
           },
         }
       );
-  
+
       alert("Personnel removed from shift successfully!");
-      // Personel listesini güncelle
       setPersonnelList((prev) =>
         prev.filter((person) => person.personnel_id !== id)
       );
@@ -86,10 +84,26 @@ const RemovePersonnel = () => {
       alert("Error removing personnel from shift.");
     }
   };
-  
+
+  function formatTime(dateTimeString) {
+    if (!dateTimeString) return "N/A";
+    const date = new Date(dateTimeString);
+    if (isNaN(date)) return dateTimeString; // Eğer geçersiz bir tarihse olduğu gibi döndür
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  }
+
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">Remove Personnel from Shift</h2>
+    <div style={{ padding: "1.5rem",  margin: "auto" }}>
+    <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "1.5rem", backgroundColor: "#fff" }}>
+    <h4
+     style={{
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      fontWeight: "bold",
+    }}
+    >Remove Personnel from Shift</h4>
       <div className="list-group">
         {shiftsList.map((shift) => (
           <div key={shift.id} className="mb-3">
@@ -101,14 +115,17 @@ const RemovePersonnel = () => {
                 border: "1px solid #ddd",
                 borderRadius: "10px",
                 padding: "15px",
-                backgroundColor: selectedShiftId === shift.id ? "#007bff" : "#fff",
+                backgroundColor: selectedShiftId === shift.id ? "#1a7f64" : "#fff",
                 color: selectedShiftId === shift.id ? "#fff" : "#000",
               }}
               onClick={() => handleSelectShift(shift.id)}
             >
-              <span>
-                {shift.title} <small>({shift.start_time} - {shift.end_time})</small>
-              </span>
+               <span>
+      {shift.title}{" "}
+      <small>
+        ({formatTime(shift.start_time)} - {formatTime(shift.end_time)})
+      </small>
+    </span>
               <i className={`bi ${selectedShiftId === shift.id ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
             </button>
             {selectedShiftId === shift.id && (
@@ -147,6 +164,7 @@ const RemovePersonnel = () => {
             )}
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

@@ -17,18 +17,19 @@ const HolidayManagement = () => {
 
   const fetchPersonnel = async () => {
     try {
-      const response = await axios.get("/api/holiday/", {
+      const response = await axios.get("/api/personnel", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       console.log("Personnel Response:", response.data); // Check the incoming response
-
-      if (response.data?.success && Array.isArray(response.data.data)) {
-        setPersonnelList(response.data.data); // Main list
-        setFilteredPersonnelList(response.data.data); // Filtered list
+  
+      // Check if the response is an array
+      if (Array.isArray(response.data)) {
+        setPersonnelList(response.data); // Main list
+        setFilteredPersonnelList(response.data); // Filtered list
       } else {
         console.warn("Personnel response is not in the expected format:", response.data);
-        setPersonnelList([]);
-        setFilteredPersonnelList([]);
+        setPersonnelList([]); // Empty the list
+        setFilteredPersonnelList([]); // Empty the filtered list
         alert("Could not retrieve personnel information.");
       }
     } catch (error) {
@@ -112,12 +113,16 @@ const HolidayManagement = () => {
 
   return (
     <div className="container mt-4">
-      <h2>Holiday Management</h2>
-
       {/* Add Holiday */}
       <div className="card my-4">
         <div className="card-body">
-          <h5 className="card-title">Add Holiday</h5>
+        <h4
+     style={{
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      fontWeight: "bold",
+    }}
+    >Add Holiday</h4>
           <div className="mb-3">
             <label className="form-label">Personnel</label>
             <input
@@ -185,7 +190,10 @@ const HolidayManagement = () => {
               placeholder="Optional"
             ></textarea>
           </div>
-          <button className="btn btn-primary" onClick={handleAddHoliday}>
+          <button className="btn btn-primary" onClick={handleAddHoliday}
+                    style={{ alignSelf: 'center', backgroundColor: "#1a7f64", width: "400px",alignItems: "center", fontSize: "17px" }}
+
+          >
             Add
           </button>
         </div>

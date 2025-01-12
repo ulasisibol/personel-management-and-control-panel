@@ -29,38 +29,40 @@ const ApprovedTasks = () => {
   }, []);
 
   return (
-    <div className="card">
-      <div className="card-body">
-        <h4 className="card-title mb-4">Completed Tasks</h4>
+    <div style={{ padding: '1rem' }}>
+      <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', backgroundColor: 'white' }}>
+        <h4 style={{ marginBottom: '1.5rem', textAlign: 'center', fontWeight: 'bold' }}>Completed Tasks</h4>
+
         {error && <div className="alert alert-danger">{error}</div>}
-        <table className="table table-hover table-bordered">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Department</th>
-              <th>Due Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task.id}>
-                <td>{task.id}</td>
-                <td>{task.baslik}</td>
-                <td>{task.aciklama}</td>
-                <td>{task.departman_adi || task.departman_id}</td>
-                <td>
-                  {task.due_date
-                    ? new Date(task.due_date).toLocaleDateString()
-                    : '-'}
-                </td>
+
+        {tasks.length > 0 ? (
+          <table className="table table-hover table-bordered" style={{ marginTop: '1rem' }}>
+            <thead style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+              <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Department</th>
+                <th>Due Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {tasks.length === 0 && !error && (
-          <div className="alert alert-info">No completed tasks found.</div>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task.id}>
+                  <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{task.id}</td>
+                  <td>{task.baslik}</td>
+                  <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {task.aciklama || 'No Description'}
+                  </td>
+                  <td>{task.departman_adi || task.departman_id || 'N/A'}</td>
+                  <td>{task.due_date ? new Date(task.due_date).toLocaleDateString() : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="alert alert-info text-center mt-3">
+            No completed tasks found.
+          </div>
         )}
       </div>
     </div>

@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/useAuth';
 
 const AddTasks = () => {
   const { user } = useAuth();
 
-  // Form fields
   const [baslik, setBaslik] = useState('');
   const [aciklama, setAciklama] = useState('');
   const [departmanId, setDepartmanId] = useState(user?.department?.departman_id || '');
   const [dueDate, setDueDate] = useState('');
+  const [departments, setDepartments] = useState([]);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:3000/api/departments/list', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setDepartments(response.data);
+      } catch (err) {
+        console.error('Failed to fetch departments:', err);
+        setError('Failed to load departments.');
+      }
+    };
+
+    if (user?.isSuperUser) {
+      fetchDepartments();
+    }
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,16 +38,20 @@ const AddTasks = () => {
     setSuccessMsg('');
 
     try {
-      // POST /api/tasks/create
-      await axios.post('/api/tasks/create', {
-        baslik,
-        aciklama,
-        departman_id: departmanId,
-        assigned_by: user.id, // User who created the task
-        due_date: dueDate || null
-      });
+      await axios.post(
+        '/api/tasks/create',
+        {
+          baslik,
+          aciklama,
+          departman_id: departmanId,
+          assigned_by: user.id,
+          due_date: dueDate || null,
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
       setSuccessMsg('Task created successfully!');
-      // Reset the form
       setBaslik('');
       setAciklama('');
       setDepartmanId(user?.department?.departman_id || '');
@@ -40,79 +63,109 @@ const AddTasks = () => {
   };
 
   return (
-    <div className="container mt-4">
-      <div className="card shadow-sm">
-        <div className="card-header bg-dark text-white">
-          <h3 className="mb-0">Add Task</h3>
-        </div>
-        <div className="card-body">
-          {error && <div className="alert alert-danger">{error}</div>}
-          {successMsg && <div className="alert alert-success">{successMsg}</div>}
+    <div style={{ padding: '1rem' }}>
+      <div
+        style={{
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          padding: '2rem',
+          backgroundColor: 'white',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <h4 style={{ marginBottom: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Add New Task</h4>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="baslik" className="form-label">
-                <strong>Title</strong>
-              </label>
-              <input
-                type="text"
-                id="baslik"
-                className="form-control"
-                placeholder="Enter task title"
-                value={baslik}
-                onChange={(e) => setBaslik(e.target.value)}
-                required
-              />
-            </div>
+        {error && <div className="alert alert-danger">{error}</div>}
+        {successMsg && <div className="alert alert-success">{successMsg}</div>}
 
-            <div className="mb-3">
-              <label htmlFor="aciklama" className="form-label">
-                <strong>Description</strong>
-              </label>
-              <textarea
-                id="aciklama"
-                className="form-control"
-                placeholder="Enter task description"
-                value={aciklama}
-                onChange={(e) => setAciklama(e.target.value)}
-                rows={3}
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          {/* Task Title */}
+          <div className="mb-3">
+            <label htmlFor="baslik" className="form-label">
+              Title
+            </label>
+            <input
+              type="text"
+              id="baslik"
+              className="form-control"
+              placeholder="Enter task title"
+              value={baslik}
+              onChange={(e) => setBaslik(e.target.value)}
+              required
+            />
+          </div>
 
-            <div className="mb-3">
-              <label htmlFor="departmanId" className="form-label">
-                <strong>Department ID</strong>
-              </label>
-              <input
-                type="number"
+          {/* Task Description */}
+          <div className="mb-3">
+            <label htmlFor="aciklama" className="form-label">
+              Description
+            </label>
+            <textarea
+              id="aciklama"
+              className="form-control"
+              placeholder="Enter task description"
+              value={aciklama}
+              onChange={(e) => setAciklama(e.target.value)}
+              rows={3}
+            />
+          </div>
+
+          {/* Department */}
+          <div className="mb-3">
+            <label htmlFor="departmanId" className="form-label">
+              Department
+            </label>
+            {user?.isSuperUser ? (
+              <select
                 id="departmanId"
-                className="form-control"
+                className="form-select"
                 value={departmanId}
                 onChange={(e) => setDepartmanId(e.target.value)}
                 required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="dueDate" className="form-label">
-                <strong>Due Date</strong>
-              </label>
+              >
+                <option value="">Select Department</option>
+                {departments.map((dept) => (
+                  <option key={dept.departman_id} value={dept.departman_id}>
+                    {dept.departman_adi}
+                  </option>
+                ))}
+              </select>
+            ) : (
               <input
-                type="date"
-                id="dueDate"
+                type="text"
                 className="form-control"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+                value={user?.department?.departman_adi || 'No Department'}
+                readOnly
               />
-            </div>
+            )}
+          </div>
 
-            <div className="d-grid">
-              <button type="submit" className="btn btn-primary">
-                Create Task
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Due Date */}
+          <div className="mb-3">
+            <label htmlFor="dueDate" className="form-label">
+              Due Date
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              className="form-control"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <div className="d-grid">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              
+              style={{ fontWeight: 'bold', padding: '0.5rem', backgroundColor: "#1a7f64" }}
+            >
+              Create Task
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

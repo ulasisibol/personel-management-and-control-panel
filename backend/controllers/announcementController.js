@@ -37,8 +37,17 @@ exports.createAnnouncement = async (req, res) => {
 
 exports.getAnnouncements = async (req, res) => {
     try {
-        const userDepartmentId = req.user.departmentId; // Tokendan gelen departman ID
-        const isSuperUser = req.user.isSuperUser; // Tokendan gelen admin bilgisi
+        const userDepartmentId = req.user.departmentId
+            ? String(req.user.departmentId)
+            : null; // Eğer departmentId yoksa null atayın
+        const isSuperUser = req.user.isSuperUser;
+
+        if (!userDepartmentId && !isSuperUser) {
+            return res.status(400).json({
+                success: false,
+                message: "User department ID is required."
+            });
+        }
 
         let query = `
             SELECT id, title, content, created_at, target_departments, is_from_department
@@ -46,17 +55,23 @@ exports.getAnnouncements = async (req, res) => {
         `;
 
         if (!isSuperUser) {
-            // Departman kullanıcıları sadece kendi duyurularını görür
             query += `
                 WHERE EXISTS (
-                    SELECT 1 FROM OPENJSON(target_departments)
-                    WHERE value = '${userDepartmentId}'
+                    SELECT 1 
+                    FROM OPENJSON(target_departments)
+                    WHERE value = @userDepartmentId
                 )
             `;
         }
 
+        query += `
+            ORDER BY created_at DESC
+        `;
+
         const pool = await getConnection();
-        const result = await pool.request().query(query);
+        const result = await pool.request()
+            .input('userDepartmentId', sql.NVarChar, userDepartmentId || "") // Null kontrolü
+            .query(query);
 
         res.status(200).json({ success: true, data: result.recordset });
     } catch (error) {
@@ -64,6 +79,7 @@ exports.getAnnouncements = async (req, res) => {
         res.status(500).json({ success: false, error: 'Sunucu hatası' });
     }
 };
+
 
 // Duyuru tekrar yayınla
 exports.republishAnnouncement = async (req, res) => {
@@ -92,3 +108,31 @@ exports.republishAnnouncement = async (req, res) => {
     }
 };
 
+
+// Duyuru sil
+exports.deleteAnnouncement = async (req, res) => {
+    try {
+        const { id } = req.params; // URL parametresinden id'yi al
+
+        if (!id) {
+            return res.status(400).json({ success: false, message: "Announcement ID is required." });
+        }
+
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input("id", sql.Int, id)
+            .query(`
+                DELETE FROM [dbo].[announcements]
+                WHERE id = @id
+            `);
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ success: false, message: "Announcement not found." });
+        }
+
+        res.status(200).json({ success: true, message: "Announcement deleted successfully." });
+    } catch (error) {
+        console.error("deleteAnnouncement error:", error.message);
+        res.status(500).json({ success: false, message: "Failed to delete announcement." });
+    }
+};

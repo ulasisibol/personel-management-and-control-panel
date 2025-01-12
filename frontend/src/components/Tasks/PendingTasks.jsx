@@ -1,6 +1,3 @@
-/**
- * ./src/components/tasks/PendingTasks.jsx
- */
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/useAuth';
@@ -11,7 +8,6 @@ const PendingTasks = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // We keep track of which task was clicked for rejection
   const [rejectModalTaskId, setRejectModalTaskId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
@@ -26,12 +22,15 @@ const PendingTasks = () => {
     try {
       setLoading(true);
       setError('');
-      // Endpoint: GET /api/tasks/pending/list
-      const response = await axios.get('/api/tasks/pending/list');
-      // Expected response: { success: true, data: [...] }
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/tasks/pending/list', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setTasks(response.data.data || []);
     } catch (err) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || 'An error occurred while fetching tasks.');
     } finally {
       setLoading(false);
     }
@@ -39,88 +38,103 @@ const PendingTasks = () => {
 
   const handleApprove = async (taskId) => {
     try {
-      // POST /api/tasks/approve
-      await axios.post('/api/tasks/approve', {
-        taskId,
-        approvedBy: user.id
-      });
-      // Refresh the list
+      const token = localStorage.getItem('token');
+      await axios.post(
+        '/api/tasks/approve',
+        { taskId, approvedBy: user.id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       fetchAwaitingTasks();
     } catch (err) {
-      console.error('handleApprove error:', err);
-      alert('An error occurred while approving the task');
+      console.error('Approval error:', err);
+      alert('An error occurred while approving the task.');
     }
   };
 
   const handleReject = async (taskId) => {
     try {
-      // POST /api/tasks/reject
-      await axios.post('/api/tasks/reject', {
-        taskId,
-        rejectedBy: user.id,
-        rejectionReason: rejectReason,
-        newDueDate: newDueDate || null
-      });
-      // Close modal
+      const token = localStorage.getItem('token');
+      await axios.post(
+        '/api/tasks/reject',
+        {
+          taskId,
+          rejectedBy: user.id,
+          rejectionReason: rejectReason,
+          newDueDate: newDueDate || null,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setRejectModalTaskId(null);
       setRejectReason('');
       setNewDueDate('');
-      // Refresh the list
       fetchAwaitingTasks();
     } catch (err) {
-      console.error('handleReject error:', err);
-      alert('An error occurred while rejecting the task');
+      console.error('Rejection error:', err);
+      alert('An error occurred while rejecting the task.');
     }
   };
 
   if (!user?.isSuperUser) {
-    return <div>You do not have permission to view this page.</div>;
+    return <div className="alert alert-warning">You do not have permission to view this page.</div>;
   }
 
   return (
-    <div>
-      <h2>Tasks Awaiting Approval</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {!loading && !error && tasks.length === 0 && (
-        <p>No tasks awaiting approval.</p>
-      )}
+    <div style={{ padding: '1rem' }}>
+      <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '1.5rem', backgroundColor: 'white' }}>
+        <h4 style={{ marginBottom: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Tasks Awaiting Approval</h4>
 
-      <table className="table table-bordered table-striped mt-3">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Department</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map((task) => (
-            <tr key={task.id}>
-              <td>{task.id}</td>
-              <td>{task.baslik}</td>
-              <td>{task.aciklama}</td>
-              <td>{task.departman_id}</td>
-              <td>
-                <button
-                  className="btn btn-success me-2"
-                  onClick={() => handleApprove(task.id)}
-                >
-                  Approve
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => setRejectModalTaskId(task.id)}
-                >
-                  Reject
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {loading && <div className="alert alert-info">Loading...</div>}
+        {error && <div className="alert alert-danger">{error}</div>}
+        {!loading && !error && tasks.length === 0 && (
+          <div className="alert alert-info text-center">No tasks awaiting approval.</div>
+        )}
+
+        {tasks.length > 0 && (
+          <table className="table table-hover table-bordered mt-3">
+            <thead style={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Department</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tasks.map((task) => (
+                <tr key={task.id}>
+                  <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{task.id}</td>
+                  <td>{task.baslik}</td>
+                  <td>{task.aciklama || 'No Description'}</td>
+                  <td>{task.departman_id || 'N/A'}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button
+                      className="btn btn-success btn-sm me-2"
+                      onClick={() => handleApprove(task.id)}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => setRejectModalTaskId(task.id)}
+                    >
+                      Reject
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
 
       {/* Reject Modal */}
       {rejectModalTaskId && (
@@ -138,20 +152,16 @@ const PendingTasks = () => {
                 </div>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label htmlFor="rejectReason" className="form-label">
-                      Rejection Reason
-                    </label>
+                    <label htmlFor="rejectReason" className="form-label">Rejection Reason</label>
                     <textarea
-                      className="form-control"
                       id="rejectReason"
+                      className="form-control"
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="newDueDate" className="form-label">
-                      New Due Date (Optional)
-                    </label>
+                    <label htmlFor="newDueDate" className="form-label">New Due Date (Optional)</label>
                     <input
                       type="date"
                       className="form-control"
@@ -163,14 +173,12 @@ const PendingTasks = () => {
                 </div>
                 <div className="modal-footer">
                   <button
-                    type="button"
                     className="btn btn-secondary"
                     onClick={() => setRejectModalTaskId(null)}
                   >
                     Cancel
                   </button>
                   <button
-                    type="button"
                     className="btn btn-danger"
                     onClick={() => handleReject(rejectModalTaskId)}
                   >

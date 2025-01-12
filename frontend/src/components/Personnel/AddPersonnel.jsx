@@ -3,35 +3,25 @@ import axios from 'axios';
 import { useAuth } from '../../context/useAuth.js';
 
 const AddPersonnel = () => {
-  // 1) We get the user information from the Auth context
   const { user } = useAuth();
-
-  // 2) The user's department ID (if null/undefined then '', i.e., empty)
-  //    In this example, we use the name user.departmentId (camelCase).
   const initialDepartmentId = user?.departmentId || '';
-
-  // 3) Form data (using snake_case according to the database field names)
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     job_title: '',
-    department_id: initialDepartmentId,  // <-- We set the Department ID here
+    department_id: initialDepartmentId,
     email: '',
     phone: '',
     address: '',
     hire_date: '',
     salary: '',
-    photo: null, // File (image)
+    photo: null,
   });
 
-  // 4) Departments (to be fetched from the API)
   const [departments, setDepartments] = useState([]);
-
-  // 5) Error and success messages
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // 6) Fetch the list of departments
   const fetchDepartments = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -44,13 +34,10 @@ const AddPersonnel = () => {
     }
   };
 
-  // 7) When the page loads, fetch the departments
   useEffect(() => {
     fetchDepartments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 8) Handle photo (file) selection
   const handleFileChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -58,7 +45,6 @@ const AddPersonnel = () => {
     }));
   };
 
-  // 9) When submitting the form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -66,25 +52,11 @@ const AddPersonnel = () => {
 
     try {
       const token = localStorage.getItem('token');
-
-      // Create FormData object
       const formDataObject = new FormData();
-      formDataObject.append('first_name', formData.first_name);
-      formDataObject.append('last_name', formData.last_name);
-      formDataObject.append('job_title', formData.job_title);
-      formDataObject.append('department_id', formData.department_id);
-      formDataObject.append('email', formData.email);
-      formDataObject.append('phone', formData.phone);
-      formDataObject.append('address', formData.address);
-      formDataObject.append('hire_date', formData.hire_date);
-      formDataObject.append('salary', formData.salary);
+      Object.keys(formData).forEach((key) => {
+        if (formData[key]) formDataObject.append(key, formData[key]);
+      });
 
-      // If there is a photo, add it
-      if (formData.photo) {
-        formDataObject.append('photo', formData.photo);
-      }
-
-      // Send to API (personnel/add)
       await axios.post('http://localhost:3000/api/personnel/add', formDataObject, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -93,8 +65,6 @@ const AddPersonnel = () => {
       });
 
       setSuccess('Personnel added successfully.');
-
-      // Reset the form
       setFormData({
         first_name: '',
         last_name: '',
@@ -108,26 +78,25 @@ const AddPersonnel = () => {
         photo: null,
       });
     } catch (err) {
-      console.error('Error adding personnel:', err);
       setError(err.response?.data?.message || 'An error occurred while adding personnel.');
     }
   };
 
-  // 10) Is the user an admin? (user.isSuperUser => true/false)
   const isAdmin = user?.isSuperUser;
-
-  // 11) If the user is not an admin (normal user) and has a departmentId, they should not be able to change the department
   const isDepartmentFixed = !!user?.departmentId && !isAdmin;
 
   return (
-    <div className="container mt-4">
-      <div className="card mb-4">
+    <div className="container mt-4" >
+      <div className="card personnel-card">
         <div className="card-body">
-          <h4 className="card-title mb-4">Add New Personnel</h4>
-
-          {/* Form Start */}
+        <h4
+     style={{
+      marginBottom: "1.5rem",
+      textAlign: "center",
+      fontWeight: "bold",
+    }}
+    >Add New Personnel</h4>
           <form onSubmit={handleSubmit}>
-            {/* First Name and Last Name */}
             <div className="row mb-3">
               <div className="col-md-6">
                 <label className="form-label">First Name</label>
@@ -151,7 +120,6 @@ const AddPersonnel = () => {
               </div>
             </div>
 
-            {/* Email and Phone */}
             <div className="row mb-3">
               <div className="col-md-6">
                 <label className="form-label">Email</label>
@@ -174,7 +142,6 @@ const AddPersonnel = () => {
               </div>
             </div>
 
-            {/* Department and Job Title */}
             <div className="row mb-3">
               <div className="col-md-6">
                 <label className="form-label">Department</label>
@@ -183,7 +150,7 @@ const AddPersonnel = () => {
                   value={formData.department_id}
                   onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
                   required
-                  disabled={isDepartmentFixed} // Normal user cannot change department
+                  disabled={isDepartmentFixed}
                 >
                   <option value="">Select Department</option>
                   {departments.map((dept) => (
@@ -204,7 +171,6 @@ const AddPersonnel = () => {
               </div>
             </div>
 
-            {/* Address */}
             <div className="row mb-3">
               <div className="col-md-12">
                 <label className="form-label">Address</label>
@@ -217,7 +183,6 @@ const AddPersonnel = () => {
               </div>
             </div>
 
-            {/* Hire Date and Salary */}
             <div className="row mb-3">
               <div className="col-md-6">
                 <label className="form-label">Hire Date</label>
@@ -240,7 +205,6 @@ const AddPersonnel = () => {
               </div>
             </div>
 
-            {/* Profile Photo */}
             <div className="row mb-3">
               <div className="col-md-12">
                 <label className="form-label">Profile Photo</label>
@@ -253,18 +217,46 @@ const AddPersonnel = () => {
               </div>
             </div>
 
-            {/* Messages */}
             {error && <div className="alert alert-danger mt-3">{error}</div>}
             {success && <div className="alert alert-success mt-3">{success}</div>}
 
-            {/* Submit Button */}
-            <button type="submit" className="btn btn-primary mt-3">
+            <button type="submit" className="btn btn-primary mt-3 w-100">
               Add Personnel
             </button>
           </form>
-          {/* Form End */}
         </div>
       </div>
+
+      <style jsx>{`
+        .personnel-card {
+          background-color: #f8f9fa;
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .form-label {
+          font-weight: bold;
+        }
+        .form-control {
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          padding: 0.5rem;
+        }
+        .btn-primary {
+          background-color: #1a7f64;
+          border: none;
+          color: #fff;
+          padding: 10px;
+          font-size: 16px;
+          font-weight: bold;
+          border-radius: 5px;
+          width: 80%;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+          background-color: #10a37f;
+        }
+      `}</style>
     </div>
   );
 };
